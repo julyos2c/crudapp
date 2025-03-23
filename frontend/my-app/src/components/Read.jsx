@@ -1,35 +1,70 @@
-import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import axios from 'axios'
+import React, { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import axios from "axios";
+import { Card, CardContent, Typography, Button, Container, Box } from "@mui/material";
 
-  function Read () {
-    const {id} = useParams();
-    const [employee, setEmployee] = useState([]);
+function Read() {
+    const { id } = useParams();
+    const [employee, setEmployee] = useState(null);
+    const [error, setError] = useState(null);
 
-        useEffect(() => {
-            axios.get(`http://localhost:5000/read/${id}`)
-            .then(res => {
-                // console.log(res.data)
+    useEffect(() => {
+        axios
+            .get(`http://localhost:5000/read/${id}`)
+            .then((res) => {
                 setEmployee(res.data[0]);
-        })
-            .catch(err => console.log(err))
+            })
+            .catch((err) => {
+                console.error("Error fetching employee:", err);
+                setError("Failed to load employee details.");
+            });
+    }, [id]);
 
-        }, [id]);
-        return (
-            <div className='d-flex vh-100 bg-primary justify-content-center align-items-center'>
-                <div className='w-50 bg-white rounded p-3'>
-                    <h2>Employee Detail</h2>
-                    <h2>ID: {employee.id}</h2>
-                    <h2>Name: {employee.name}</h2>
-                    <h2>Email: {employee.email}</h2>
-                    <h2>Position: {employee.position}</h2>
+    if (error) {
+        return <Typography color="error" align="center" mt={5}>{error}</Typography>;
+    }
 
-                    <Link to="/" className='btn btn-primary me-2'>Back</Link>
-                    <Link to={`/update/${employee.id}`} className='btn btn-primary'>Edit</Link>
-                </div>
-            </div>
-        )
-  }
+    if (!employee) {
+        return <Typography align="center" mt={5}>Loading employee details...</Typography>;
+    }
 
-  export default Read;
-  
+    return (
+        <Container maxWidth="sm">
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                <Card sx={{ minWidth: 300, p: 3, textAlign: "center" }}>
+                    <CardContent>
+                        <Typography variant="h5" fontWeight="bold" gutterBottom>
+                            Employee Details
+                        </Typography>
+                        <Typography variant="body1"><strong>ID:</strong> {employee.id}</Typography>
+                        <Typography variant="body1"><strong>Name:</strong> {employee.name}</Typography>
+                        <Typography variant="body1"><strong>Email:</strong> {employee.email}</Typography>
+                        <Typography variant="body1"><strong>Position:</strong> {employee.position}</Typography>
+
+                        <Box mt={3} display="flex" justifyContent="space-between">
+                            <Button 
+                                variant="contained" 
+                                color="primary" 
+                                component={Link} 
+                                to="/home"
+                            >
+                                Back
+                            </Button>
+
+                            <Button 
+                                variant="contained" 
+                                color="secondary" 
+                                component={Link} 
+                                to={`/update/${employee.id}`}
+                            >
+                                Edit
+                            </Button>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </Box>
+        </Container>
+    );
+}
+
+export default Read;

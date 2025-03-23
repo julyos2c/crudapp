@@ -1,117 +1,139 @@
-import React, { use, useEffect, useState } from 'react'
-// import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-// import { updateEmployee } from '../redux/reducers/EmployeeReducer';
-import axios from 'axios';
-import { FaEdit, FaArrowLeft } from 'react-icons/fa';
-
-
-
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { TextField, Button, Container, Card, Typography, Box } from "@mui/material";
+import { FaEdit, FaArrowLeft } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 function Update() {
-    // const {id} = useParams();
-    // const employees = useSelector((state) => state.employees);
-    // const existingEmployee = employees.find(emp => emp.id === parseInt(id));
-
-    // if (!exisitngEmployee) {
-    //     return <h3 className="text-center">Employee not found</h3>
-    // }
-    // const {name, email, position} = existingEmployee;
-    // const [uname, setName] = useState(name);
-    // const [uemail, setEmail] = useState(email);
-    // const [uposition, setPosition] = useState(position);
-    // const dispatch = useDispatch();
-    // const navigate = useNavigate();
-
-    // const handleUpdate = (event) => {
-    //     event.preventDefault();
-    //     dispatch(updateEmployee({
-    //         id: parseInt(id),
-    //         name: uname,
-    //         email: uemail,
-    //         position: uposition
-    //     }));
-    //     navigate('/');
-    // };
-    
-    const {id} = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
 
-        useEffect(() => {
-            axios.get(`http://localhost:5000/read/${id}`)
-            .then(res => {
-                console.log(res)
-                setValues({...values, name: res.data[0].name, email: res.data[0].email, position: res.data[0].position});
-            })
-            .catch(err => console.Console(err))
-        }, [])
     const [values, setValues] = useState({
-        name: '',
-        email: '',
-        position: ''
-    })
+        name: "",
+        email: "",
+        position: "",
+    });
+
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        axios
+            .get(`http://localhost:5000/read/${id}`)
+            .then((res) => {
+                if (res.data.length > 0) {
+                    setValues({
+                        name: res.data[0].name,
+                        email: res.data[0].email,
+                        position: res.data[0].position,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        text: "Employee not found!",
+                    });
+                    navigate("/home");
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error!",
+                    text: "Failed to fetch employee details.",
+                });
+                navigate("/home");
+            });
+    }, [id, navigate]);// Added dependency array
+
     const handleUpdate = (event) => {
         event.preventDefault();
-        axios.put(`http://localhost:5000/update/${id}`, values)
-        .then(res => {
-            console.log(res)
-            navigate('/')
-        }).catch(err => console.log(err));
+        axios
+            .put(`http://localhost:5000/update/${id}`, values)
+            .then(() => {
+                Swal.fire({
+                    icon: "success",
+                    title: "Updated!",
+                    text: "Employee details updated successfully.",
+                    timer: 2000,
+                }).then(() => navigate("/home"));
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed!",
+                    text: "Failed to update employee details.",
+                });
+            });
+    };
+
+    if (error) {
+        return <Typography color="error" align="center" mt={5}>{error}</Typography>;
     }
 
     return (
-        <div className="d-flex w-100 vh-100 justify-content-center align-items-center">
-            <div className="col-11 col-md-6 border bg-secondary text-white p-4 rounded">
-                <h3 className="text-center">Update Employee</h3>
-                <form onSubmit={handleUpdate}>
-                    <div className="mb-3">
-                        <label htmlFor="name">Name</label>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            placeholder="John Doe"
-                            className="form-control" 
-                            value={values.name}
-                            onChange={e => setValues({ ...values, name: e.target.value })}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="email">Email</label>
-                        <input 
-                            type="email" 
-                            name="email" 
-                            placeholder="email@example.com"
-                            className="form-control" 
-                            value={values.email}
-                            onChange={e => setValues({ ...values, email: e.target.value })}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="position">Position</label>
-                        <input 
-                            type="text" 
-                            name="position" 
-                            placeholder="CEO"
-                            className="form-control" 
-                            value={values.position}
-                            onChange={e => setValues({ ...values, position: e.target.value })}
-                        />
-                    </div>
-                    <div className="d-flex justify-content-between gap-3">
-                        <button 
-                            type="button" 
-                            className="btn btn-dark d-flex align-items-center justify-content-center px-3"
-                            onClick={() => navigate(-1)}
-                        >
-                            <FaArrowLeft className="me-2" /> Back
-                        </button>
-                        <button className="btn btn-info">
-                            <FaEdit size={20} className="me-2" /> Update
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <Container maxWidth="sm">
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                <Card sx={{ p: 4, width: "100%", textAlign: "center" }}>
+                    <Typography variant="h5" fontWeight="bold" gutterBottom>
+                        Update Employee
+                    </Typography>
+
+                    <form onSubmit={handleUpdate}>
+                        <Box mb={2}>
+                            <TextField
+                                fullWidth
+                                label="Name"
+                                variant="outlined"
+                                value={values.name}
+                                onChange={(e) => setValues({ ...values, name: e.target.value })}
+                            />
+                        </Box>
+
+                        <Box mb={2}>
+                            <TextField
+                                fullWidth
+                                label="Email"
+                                type="email"
+                                variant="outlined"
+                                value={values.email}
+                                onChange={(e) => setValues({ ...values, email: e.target.value })}
+                            />
+                        </Box>
+
+                        <Box mb={3}>
+                            <TextField
+                                fullWidth
+                                label="Position"
+                                variant="outlined"
+                                value={values.position}
+                                onChange={(e) => setValues({ ...values, position: e.target.value })}
+                            />
+                        </Box>
+
+                        <Box display="flex" justifyContent="space-between">
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                onClick={() => navigate(-1)}
+                                startIcon={<FaArrowLeft />}
+                            >
+                                Back
+                            </Button>
+
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                startIcon={<FaEdit />}
+                            >
+                                Update
+                            </Button>
+                        </Box>
+                    </form>
+                </Card>
+            </Box>
+        </Container>
     );
 }
 

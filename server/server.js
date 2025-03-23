@@ -1,9 +1,11 @@
 import express from 'express';
 import mysql from 'mysql';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const PORT = 5000;
+const SECRET_KEY = "your-secret-key";
 
 app.use(cors());
 app.use(express.json());
@@ -14,6 +16,21 @@ const db = mysql.createConnection({
     user: "root",
     password: "admin123",
     database: 'companydb'
+});
+
+const generateToken = (user) => {
+    return jwt.sign({ username: user.username } , SECRET_KEY, { expiresIn: "1h" });
+};
+
+app.post("/login", (req, res) => {
+    const { username, password } = req.body;
+
+    if (username === "admin" && password === "password") { 
+        const token = generateToken({ username });
+        res.json({ token });
+    } else {
+        res.status(401).json({ message: "Invalid Credentials" });
+    }
 });
 
 // db.connect((err) => {

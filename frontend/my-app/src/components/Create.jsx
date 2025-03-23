@@ -3,14 +3,14 @@ import { addEmployee } from '../redux/reducers/EmployeeReducer';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaArrowLeft, FaPaperPlane } from 'react-icons/fa';
+import { TextField, Button, Paper, Grid, Typography, Snackbar, Alert } from '@mui/material';
+import { ArrowBack, Send } from '@mui/icons-material';
+import Swal from "sweetalert2";
 
 function Create() {
-    const [values, setValues] = useState({
-        name: "",
-        email: "",
-        position: ""
-    });
+    const [values, setValues] = useState({ name: "", email: "", position: "" });
+    const [error, setError] = useState(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -20,72 +20,109 @@ function Create() {
         
         try {
             const response = await axios.post('http://localhost:5000/employees', values);
-            console.log("Employee added successfully:", response.data);
-    
+            // console.log("Employee added successfully:", response.data);
+
             // Dispatch to Redux Store
             dispatch(addEmployee(response.data));
-    
-            navigate('/');
+
+            Swal.fire({
+                icon: "success",
+                title: "Employee Added!",
+                text: "The new employee has been successfully added.",
+                timer: 1000,
+                showConfirmButton: false,
+            });
+
+            navigate('/home');
         } catch (error) {
-            console.error("Error adding employee:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error!",
+                text: "Failed to add the employee. Please try again.",
+            });
         }
     };
 
+     // Function to handle Enter key press
+     const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            handleSubmit(e);
+        }
+    }
+
     return (
-        <div className="container min-vh-100 d-flex justify-content-center align-items-center">
-            <div className="col-12 col-md-6 col-lg-4 border bg-secondary text-white p-4 p-md-5 rounded">
-                <h3 className="text-center mb-4">Add New Employee</h3>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="name" className="form-label">Name</label>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            placeholder="John Doe" 
-                            onChange={e => setValues({...values, name: e.target.value})} 
-                            className="form-control" 
-                            required 
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="email" className="form-label">Email</label>
-                        <input 
-                            type="email" 
-                            name="email" 
-                            placeholder="email@example.com" 
-                            onChange={e => setValues({...values, email: e.target.value})} 
-                            className="form-control" 
-                            required 
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="position" className="form-label">Position</label>
-                        <input 
-                            type="text" 
-                            name="position" 
-                            placeholder="CEO" 
-                            onChange={e => setValues({...values, position: e.target.value})} 
-                            className="form-control" 
-                            required 
-                        />
-                    </div>
+        <Grid container justifyContent="center" alignItems="center" style={{ height: "100vh" }}>
+            <Grid item xs={10} sm={6} md={4}>
+                <Paper elevation={3} style={{ padding: 24, textAlign: "center" }}>
+                    <Typography variant="h5" gutterBottom>Add New Employee</Typography>
 
-                    <div className="d-flex w-100 justify-content-between gap-2">
-                        <button 
-                            type="button" 
-                            className="btn btn-dark d-flex align-items-center justify-content-center px-3"
-                            onClick={() => navigate(-1)}
-                        >
-                            <FaArrowLeft className="me-2" /> Back
-                        </button>
+                    <form onSubmit={handleSubmit}>
+                        <TextField
+                            fullWidth
+                            label="Name"
+                            variant="outlined"
+                            margin="normal"
+                            value={values.name}
+                            onChange={(e) => setValues({ ...values, name: e.target.value })}
+                            required
+                        />
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            type="email"
+                            variant="outlined"
+                            margin="normal"
+                            value={values.email}
+                            onChange={(e) => setValues({ ...values, email: e.target.value })}
+                            required
+                        />
+                        <TextField
+                            fullWidth
+                            label="Position"
+                            variant="outlined"
+                            margin="normal"
+                            value={values.position}
+                            onChange={(e) => setValues({ ...values, position: e.target.value })}
+                            required
 
-                        <button className="btn btn-info d-flex align-items-center justify-content-center px-3">
-                            <FaPaperPlane className="me-2" /> Submit
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                            onKeyDown={handleKeyDown} // Listen for Enter key
+                        />
+
+                        <Grid container spacing={2} style={{ marginTop: 16 }}>
+                            <Grid item xs={6}>
+                                <Button 
+                                    fullWidth 
+                                    variant="contained" 
+                                    color="secondary" 
+                                    startIcon={<ArrowBack />}
+                                    onClick={() => navigate(-1)}
+                                >
+                                    Back
+                                </Button>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Button 
+                                    fullWidth 
+                                    type="submit"
+                                    variant="contained" 
+                                    color="primary" 
+                                    startIcon={<Send />}
+                                >
+                                    Submit
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </form>
+                </Paper>
+            </Grid>
+
+            {/* Snackbar for error messages */}
+            <Snackbar open={openSnackbar} autoHideDuration={4000} onClose={() => setOpenSnackbar(false)}>
+                <Alert severity="error" onClose={() => setOpenSnackbar(false)}>
+                    {error}
+                </Alert>
+            </Snackbar>
+        </Grid>
     );
 }
 
